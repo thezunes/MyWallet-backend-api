@@ -1,0 +1,22 @@
+{
+  "name": "mywallet-backend-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "dev": "nodemon ./src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thezunes/mywallet-backend-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thezunes/mywallet-backend-api/issues"
+  },
+  "homepage": "https://github.com/thezunes/mywallet-backend-api#readme"
+}
