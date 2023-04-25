@@ -58,4 +58,4 @@ res.status(401).send(err.message)
 
 
 
- app.listen(5001, () => console.log(`Server is Running at port ${process.env.PORT}`))
+ app.listen(process.env.PORT, () => console.log(`Server is Running at port ${process.env.PORT}`))
