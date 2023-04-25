@@ -56,6 +56,54 @@ res.status(401).send(err.message)
 
 })
 
+app.post("/transaction", async(req, res) => { 
+
+  const {name, value, type} = req.body;
+   const { authorization } = req.headers;
+   const tokenVerify = authorization?.replace("Bearer ", "");
+  // console.log(req.headers)
+  console.log(authorization)
+
+  const isAuth = await db.collection("sessions").findOne({token: tokenVerify})
+  const idUser = isAuth?.id;
+
+  
+  
+   if(!isAuth) return res.status(401).send("O usuário não está autorizado a efetuar a ação")
+  
+    console.log("passou")
+
+  const userSchema = joi.object({
+    name: joi.string().required(),
+    value: joi.number().required(),
+    id: joi.required(),
+    type: joi.string().valid('entrada','saida').required(),
+    date: joi.required()
+    });
+  
+    const transaction = {name: name, value: value, id: idUser, type: type, date: dayjs().format("DD/MM")}
+    console.log(idUser)
+    const validation = userSchema.validate(transaction, { abortEarly: false })
+  if (validation.error) {
+     const errors = validation.error.details.map((detail) => detail.message);
+     return res.status(422).send(errors);
+   }
+  
+  try{
+  
+   await db.collection("transactions").insertOne(transaction) 
+   res.status(200).send("Enviado com sucesso")
+  
+  }
+  
+  catch(err){
+  
+  res.status(404).send(err)
+  console.log("chegou aqui")
+  }
+  
+  })
+
 app.post("/signin", async (req, res) => {
   
   const {email, password} = req.body
@@ -97,51 +145,7 @@ catch(err) {
 }
 })
  
-app.post("/transaction", async(req, res) => { 
 
-const {name, value, type} = req.body;
-
-// const body = {name: name, value: value, type: "saida"}
-
-
-const {auth} = req.headers;
-const isAuth = await db.collection("sessions").findOne({token: auth})
-const idUser = isAuth?.id;
-
- if(!isAuth) return res.status(401).send("O usuário não está autorizado a efetuar a ação")
-
-const userSchema = joi.object({
-  name: joi.string().required(),
-  value: joi.number().required(),
-  id: joi.required(),
-  type: joi.string().valid('entrada','saida').required(),
-  date: joi.required()
-  });
-
-  const transaction = {name: name, value: value, id: idUser, type: type, date: dayjs().format("DD/MM")}
-  console.log(idUser)
-  const validation = userSchema.validate(transaction, { abortEarly: false })
-if (validation.error) {
-   const errors = validation.error.details.map((detail) => detail.message);
-   return res.status(422).send(errors);
- }
-
- 
- 
-try{
-
- await db.collection("transactions").insertOne(transaction) 
- res.status(200).send("Enviado com sucesso")
-
-}
-
-catch(err){
-
-res.status(404).send(err)
-
-}
-
-})
 
 //  app.listen(process.env.PORT, () => console.log(`Server is Running at port ${process.env.PORT}`))
- app.listen(5002, () => console.log(`Server is Running at port ${process.env.PORT}`))
+ app.listen(5000, () => console.log(`Server is Running at port ${process.env.PORT}`))
