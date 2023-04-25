@@ -22,15 +22,16 @@ mongoClient.connect()
     .then(() => db = mongoClient.db())
     .catch((err) => console.log(err.message))
 
-const userSchema = joi.object({
-name: joi.string().required(),
-email: joi.string().email().required(),
-password: joi.string().min(3).required()
 
-});
 
 app.post("/signup", async(req, res) => {
 const {name, email, password} = req.body
+const userSchema = joi.object({
+  name: joi.string().required(),
+  email: joi.string().email().required(),
+  password: joi.string().min(3).required()
+  
+  });
 const user = {name,email,password}
 const encryptedPassword = bcrypt.hashSync(password, 10);
 const validation = userSchema.validate(user, { abortEarly: false })
@@ -42,8 +43,7 @@ const validation = userSchema.validate(user, { abortEarly: false })
   
 try {
 const newUser = {name: name,email: email,password: encryptedPassword}
-const isRegistered = await db.collection("users").findOne({email: email})
-console.log(isRegistered)
+const isRegistered = await db.collection("users").findOne({email: email}) 
 if(isRegistered){ return res.status(409).send("Email já cadastrado")} 
 res.sendStatus(201)
 db.collection("users").insertOne(newUser)
@@ -55,7 +55,42 @@ res.status(401).send(err.message)
 
 })
 
+app.post("/signin", async (req, res) => {
+  
+  const {email, password} = req.body
+  const user = {email,password}
+  const userSchema = joi.object({
+    email: joi.string().email().required(),
+    password: joi.string().min(3).required()
+    });
+   const validation = userSchema.validate(user, { abortEarly: false })
+  if (validation.error) {
+     const errors = validation.error.details.map((detail) => detail.message);
+     return res.status(422).send(errors);
+   }
+
+   const isRegistered = await db.collection("users").findOne({email: email})
+   if(!isRegistered) return res.status(404).send("Usuário não cadastrado")
+
+   const userDate  = await db.collection("users").findOne({email: email})
+   const auth = await bcrypt.compare(password, userDate.password)
+   console.log(userDate.password)
+   if(!auth) return res.status(401).send("Senha incorreta")
+ 
+try{
+
+res.status(200).send(token)
+
+}
+
+catch(err) {
+
+  res.status(404).send(err)
+
+}
+})
+ 
 
 
-
- app.listen(process.env.PORT, () => console.log(`Server is Running at port ${process.env.PORT}`))
+//  app.listen(process.env.PORT, () => console.log(`Server is Running at port ${process.env.PORT}`))
+ app.listen(5001, () => console.log(`Server is Running at port ${process.env.PORT}`))
