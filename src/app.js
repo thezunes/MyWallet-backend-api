@@ -5,6 +5,7 @@ import dotenv from "dotenv"
 import joi from "joi";
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcrypt';
+import dayjs from "dayjs";
 
 
 
@@ -63,6 +64,9 @@ app.post("/signin", async (req, res) => {
     email: joi.string().email().required(),
     password: joi.string().min(3).required()
     });
+
+  const userInfo = await db.collection("users").findOne({email: email})
+
    const validation = userSchema.validate(user, { abortEarly: false })
   if (validation.error) {
      const errors = validation.error.details.map((detail) => detail.message);
@@ -74,12 +78,15 @@ app.post("/signin", async (req, res) => {
 
    const userDate  = await db.collection("users").findOne({email: email})
    const auth = await bcrypt.compare(password, userDate.password)
-   console.log(userDate.password)
+   console.log(userInfo)
    if(!auth) return res.status(401).send("Senha incorreta")
  
 try{
 
 res.status(200).send(token)
+await db.collection("sessions").insertOne({id: userInfo._id, token: token})
+const teste = db.collection("sessions").findOne({token})
+console.log(teste)
 
 }
 
@@ -90,7 +97,51 @@ catch(err) {
 }
 })
  
+app.post("/transaction", async(req, res) => { 
 
+const {name, value, type} = req.body;
+
+// const body = {name: name, value: value, type: "saida"}
+
+
+const {auth} = req.headers;
+const isAuth = await db.collection("sessions").findOne({token: auth})
+const idUser = isAuth?.id;
+
+ if(!isAuth) return res.status(401).send("O usuário não está autorizado a efetuar a ação")
+
+const userSchema = joi.object({
+  name: joi.string().required(),
+  value: joi.number().required(),
+  id: joi.required(),
+  type: joi.string().valid('entrada','saida').required(),
+  date: joi.required()
+  });
+
+  const transaction = {name: name, value: value, id: idUser, type: type, date: dayjs().format("DD/MM")}
+  console.log(idUser)
+  const validation = userSchema.validate(transaction, { abortEarly: false })
+if (validation.error) {
+   const errors = validation.error.details.map((detail) => detail.message);
+   return res.status(422).send(errors);
+ }
+
+ 
+ 
+try{
+
+ await db.collection("transactions").insertOne(transaction) 
+ res.status(200).send("Enviado com sucesso")
+
+}
+
+catch(err){
+
+res.status(404).send(err)
+
+}
+
+})
 
 //  app.listen(process.env.PORT, () => console.log(`Server is Running at port ${process.env.PORT}`))
- app.listen(5001, () => console.log(`Server is Running at port ${process.env.PORT}`))
+ app.listen(5002, () => console.log(`Server is Running at port ${process.env.PORT}`))
