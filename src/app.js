@@ -42,14 +42,14 @@ const validation = userSchema.validate(user, { abortEarly: false })
   
 try {
 const newUser = {name: name,email: email,password: encryptedPassword}
-const isRegistered = db.collection("users").findOne({email: email})
-
+const isRegistered = await db.collection("users").findOne({email: email})
+console.log(isRegistered)
 if(isRegistered){ return res.status(409).send("Email já cadastrado")} 
 res.sendStatus(201)
 db.collection("users").insertOne(newUser)
 }
 catch(err){
-res.status(401).send(err)
+res.status(401).send(err.message)
 
 }
 
@@ -58,4 +58,4 @@ res.status(401).send(err)
 
 
 
- app.listen(process.env.PORT, () => console.log(`Server is Running at port ${process.env.PORT}`))
+ app.listen(5001, () => console.log(`Server is Running at port ${process.env.PORT}`))
