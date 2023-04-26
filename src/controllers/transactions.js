@@ -1,6 +1,8 @@
 import { db } from "../app.js"
 import { ObjectId } from "mongodb"
 import dayjs from "dayjs"
+import { userSchema } from "../schemas/transaction.schemas.js";
+
 
 
 export async function transaction (req, res) { 
@@ -22,7 +24,9 @@ export async function transaction (req, res) {
   
       
     
-      const transaction = {name: name, value: value, id: idUser, type: type, date: dayjs().format("DD/MM")}
+      const transaction = {name: name, value:  value, id: idUser, type: type, date: dayjs().format("DD/MM")}
+      const transactionR$ = {name: name, value: `R$${value}`, id: idUser, type: type, date: dayjs().format("DD/MM")}
+
       console.log(idUser)
       const validation = userSchema.validate(transaction, { abortEarly: false })
     if (validation.error) {
@@ -32,7 +36,7 @@ export async function transaction (req, res) {
     
     try{
     
-     await db.collection("transactions").insertOne(transaction) 
+     await db.collection("transactions").insertOne(transactionR$) 
      res.status(200).send("Enviado com sucesso")
     
     }
@@ -40,7 +44,6 @@ export async function transaction (req, res) {
     catch(err){
     
     res.status(404).send(err)
-    console.log("chegou aqui")
     }
     
 }
@@ -52,6 +55,9 @@ export async function transactions(req, res) {
   // const transactions = await db.collection("transactions").find(id)
   const userId = await db.collection('sessions').findOne({token: token});
   const newUserID = userId?.id.toString();
+ 
+  const userName = await db.collection("users").findOne({_id: new ObjectId(`${newUserID}`)});
+
   
   if(!userId) return res.status(404).send("Usuário não encontrado")
   
@@ -59,10 +65,11 @@ export async function transactions(req, res) {
   
   try{ 
   
-  const allTransactions = await db.collection("transactions").find({id: new ObjectId(`${newUserID}`)}).toArray();
+  const allTransactions = await db.collection("transactions").find({id: new ObjectId(`${newUserID}`)}).sort({ date: -1 }).toArray();
   
-  const transactions = allTransactions ? allTransactions : [];
-  res.status(200).send({transactions});
+  
+  res.send(allTransactions);
+  console.log(allTransactions)
   }
   
   catch {

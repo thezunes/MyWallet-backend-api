@@ -38,8 +38,9 @@ export async function signin(req, res) {
       const {email, password} = req.body
       const user = {email,password}
       const token = uuid()
-
       const userInfo = await db.collection("users").findOne({email: email})
+      const infoAuth = {token: token, name: userInfo.name}
+
     
       const validation = userSchemaSignIn.validate(user, { abortEarly: false })
       if (validation.error) {
@@ -57,7 +58,7 @@ export async function signin(req, res) {
        console.log("passou")
     try{
     
-    res.status(200).send(token)
+    res.status(200).send(infoAuth)
     await db.collection("sessions").insertOne({id: userInfo._id, token: token})
     const teste = db.collection("sessions").findOne({token})
     console.log(teste)
