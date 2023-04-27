@@ -39,9 +39,8 @@ export async function signin(req, res) {
       const user = {email,password}
       const token = uuid()
       const userInfo = await db.collection("users").findOne({email: email})
-      const infoAuth = {token: token, name: userInfo.name}
+      
 
-    
       const validation = userSchemaSignIn.validate(user, { abortEarly: false })
       if (validation.error) {
          const errors = validation.error.details.map((detail) => detail.message);
@@ -50,7 +49,7 @@ export async function signin(req, res) {
     
        const isRegistered = await db.collection("users").findOne({email: email})
        if(!isRegistered) return res.status(404).send("Usuário não cadastrado")
-    
+       const infoAuth = {token: token, name: userInfo.name}
        const userDate  = await db.collection("users").findOne({email: email})
        const auth = await bcrypt.compare(password, userDate.password)
        console.log(userInfo)
@@ -69,5 +68,16 @@ export async function signin(req, res) {
     
       res.status(404).send(err)
         console.log(err)
+    }
+}
+
+export async function logout(req, res) {
+    const { token } = req.body
+
+    try {
+        await db.collection("sessions").deleteOne({ token })
+        res.sendStatus(200)
+    } catch (err) {
+        res.status(500).send(err.message)
     }
 }

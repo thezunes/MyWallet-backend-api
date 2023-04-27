@@ -24,9 +24,8 @@ export async function transaction (req, res) {
   
       
     
-      const transaction = {name: name, value:  value, id: idUser, type: type, date: dayjs().format("DD/MM")}
-      const transactionR$ = {name: name, value: `R$${value}`, id: idUser, type: type, date: dayjs().format("DD/MM")}
-
+      const transaction = {name: name, value:  Number(value), id: idUser, type: type, date: dayjs().format("DD/MM")}
+ 
       console.log(idUser)
       const validation = userSchema.validate(transaction, { abortEarly: false })
     if (validation.error) {
@@ -36,7 +35,7 @@ export async function transaction (req, res) {
     
     try{
     
-     await db.collection("transactions").insertOne(transactionR$) 
+     await db.collection("transactions").insertOne(transaction) 
      res.status(200).send("Enviado com sucesso")
     
     }
@@ -56,9 +55,8 @@ export async function transactions(req, res) {
   const userId = await db.collection('sessions').findOne({token: token});
   const newUserID = userId?.id.toString();
  
-  const userName = await db.collection("users").findOne({_id: new ObjectId(`${newUserID}`)});
+  const userName = await db.collection("users").findOne({newUserID});
 
-  
   if(!userId) return res.status(404).send("Usuário não encontrado")
   
   console.log(newUserID)

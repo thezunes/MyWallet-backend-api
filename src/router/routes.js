@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { userSchemaSignUp, userSchemaSignIn } from "../schemas/auth-schemas.js"
 import { userSchema } from "../schemas/transaction.schemas.js"
-import { signin, signup } from "../controllers/auth.js"
+import { logout, signin, signup } from "../controllers/auth.js"
 import { transaction, transactions } from "../controllers/transactions.js"
  
 const routerAuth = Router()
@@ -10,6 +10,8 @@ const routerAuth = Router()
 
 routerAuth.post("/signin", signin)
 routerAuth.post("/signup", signup)
+routerAuth.post("/logout", logout)
+
 
 // validateSchema(userSchemaSignUp)
 // validateSchema(userSchemaSignIn)
